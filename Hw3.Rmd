@@ -10,15 +10,102 @@ library(tidyverse)
 library(dplyr)
 library(p8105.datasets)
 data("instacart")
+data("BRFSS")
 ```
-
+## Problem1
 ```{r}
 aisle_df = 
   instacart %>%
-  select(aisle) %>%
-  distinct() %>%
-  mutate(,order_num = sort((table(instacart$aisle)))) #create a new aisle data frame shows each aisles with there corresponding order number 
-as.numeric(count(aisle_df[1])) #number of aisles
-tail(aisle_df, n =1) #the aisle of the most items ordered from is the last row of the data frame
+  count(aisle) %>%     
+  arrange(desc(n))
+nrow(aisle_df) #number of aisles
+head(aisle_df, n =1) #the aisle of the most items ordered from is the last row of the data frame
 ```
+From the aisle_df there are 134 aisles and fresh vegatables is the most order from. The order number is 150609. 
+
+```{r message = FALSE}
+aisle_plot =
+  aisle_df %>%
+  filter(n > 10000) %>%#limiting to aisles with more than 10000 items ordered
+  mutate(aisle = factor(aisle), aisle = fct_reorder(aisle, n))
+ggplot(aisle_plot,aes(x = aisle, y = n)) + 
+geom_point() + theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1)) #plot number of items ordered in each aisle
+```
+
+```{r}
+popular_item_df = 
+  instacart %>%
+  filter(aisle %in% c("baking ingredients", "dog food care","packaged vegetables fruits")) %>%                       #filter out required aisles
+  group_by(aisle) %>%     
+  count(product_name) %>%  #count the number of times each item is ordered 
+  mutate(rank = min_rank(desc(n))) %>% #rank the popular items
+  filter(rank < 4) %>% #showing the three most popular items
+  arrange(aisle, rank) #showing the three most popular items in each of the aisles in rank order
+popular_item_df
+```
+
+```{r message = FALSE}
+mean_hour_df = 
+  instacart %>%
+  filter(product_name %in% c("Pink Lady Apples","Coffee Ice Cream")) %>% #filter out specific product name
+  group_by(product_name, order_dow) %>% 
+  summarize(mean_hour = mean(order_hour_of_day)) %>%  #calculate mean hour of the day 
+  pivot_wider(names_from = order_dow, values_from = mean_hour) %>%  #format this table for 2*7
+  rename(Sunday = "0",Monday = "1",Tuesday = "2",Wednesday = "3",Thursday = "4",Friday = "5",Saturday = "6" ) #rename the column to make the table clear
+mean_hour_df
+```
+
+## Problem2
+```{r}
+library(p8105.datasets)
+data("brfss_smart2010")
+```
+
+```{r}
+brfss_df = 
+  brfss_smart2010 %>%
+  janitor::clean_names() %>% #format the data to use appropriate variable names;
+  mutate(topic = "Overall Health") %>% #focus on the “Overall Health” topic
+  filter(response %in% c("Excellent","Very good","Good","Fair", "Poor")) %>%  #include only responses from “Excellent” to “Poor”
+  mutate(
+    response = forcats::fct_relevel(response, c("Excellent","Very good","Good","Fair", "Poor"))) %>% 
+  arrange(desc(response)) #organize responses as a factor taking levels ordered from “Poor” to “Excellent”
+brfss_df
+```
+
+```{r}
+year02_df = 
+  brfss_df %>%
+  filter(year == 2002) %>%
+  group_by(locationabbr) %>%
+  summarize(num_02 = n_distinct(locationdesc)) %>%
+ filter(num_02 >= 7 ) #states were observed at 7 or more locations in 2002
+year02_df
+
+year10_df = 
+  brfss_df %>%
+  filter(year == 2010)  %>%
+ group_by(locationabbr) %>%
+  summarize(num_10 = n_distinct(locationdesc))%>%
+ filter(num_10 >= 7 ) #states were observed at 7 or more locations in 2010
+year10_df
+```
+In 2002, state CT, FL, MA, NC,NJ, PA were observed at 7 or more locations.
+In 2010, state CA, CO, FL, MA, MD, NC, NE, NJ, NY, OH, PA, SC, TX, WA were observed at 7 or more locations.
+```{r message = FALSE}
+excellent_df = 
+  brfss_df %>%
+  filter(response == 'Excellent') %>% #dataset that is limited to Excellent responses
+  group_by(locationabbr, year) %>%
+  summarize(mean_data = mean(data_value)) #averages the data_value across locations within a state.
+excellent_df  
+ggplot(excellent_df,aes(x = year, y = mean_data, group= locationabbr, color = locationabbr)) + geom_line(alpha = 0.6) #“spaghetti” plot of this average value over time within a state
+
+```
+
+```{r}
+
+  
+```
+
 
