@@ -9,10 +9,11 @@ output: github_document
 library(tidyverse)
 library(dplyr)
 library(p8105.datasets)
+library(ggridges)
 data("instacart")
 data("BRFSS")
 ```
-## Problem1
+## Problem 1
 ```{r}
 aisle_df = 
   instacart %>%
@@ -21,7 +22,7 @@ aisle_df =
 nrow(aisle_df) #number of aisles
 head(aisle_df, n =1) #the aisle of the most items ordered from is the last row of the data frame
 ```
-From the aisle_df there are 134 aisles and fresh vegatables is the most order from. The order number is 150609. 
+From the aisle_df there are 134 aisles and fresh vegetables is the most order from. The order number is 150609. 
 
 ```{r message = FALSE}
 aisle_plot =
@@ -55,7 +56,7 @@ mean_hour_df =
 mean_hour_df
 ```
 
-## Problem2
+## Problem 2
 ```{r}
 library(p8105.datasets)
 data("brfss_smart2010")
@@ -104,8 +105,23 @@ ggplot(excellent_df,aes(x = year, y = mean_data, group= locationabbr, color = lo
 ```
 
 ```{r}
+two_year_df = 
+  brfss_df %>%
+  filter(year == c('2006','2010'),locationabbr == "NY") %>%
+  mutate( 
+    year = factor(year), locationabbr = factor(locationabbr), locationdesc = factor(locationdesc), data_value = as.numeric(data_value)) %>%
+mutate(
+  response = factor(response, levels= c("Poor", "Fair","Good","Very good","Excellent"))
+)
 
-  
+ggplot(two_year_df, aes(x = response, y = data_value)) + 
+  geom_boxplot()+
+  facet_grid(. ~ year) +
+  viridis::scale_fill_viridis(discrete = TRUE)
+```
+
+## Problem 3
+```{r}
 ```
 
 
