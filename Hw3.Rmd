@@ -145,7 +145,7 @@ agg_df =
   knitr::kable()
 agg_df
 ```
-There is no trends apparent.
+There is relative big activity amount on Third week Monday. Generally Weekend have more activity amount compare to weekdays. Weekends on week 4 and 5 have relative less activity amount compare to other weekends.
 
 ```{r message = FALSE}
 day_activity = 
