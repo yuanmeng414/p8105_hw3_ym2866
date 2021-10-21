@@ -138,10 +138,10 @@ There are `r ncol(accel_data)` variable. The variables are week, day_id,day,acti
 ```{r message = FALSE}
 agg_df = 
   accel_data %>% 
-  group_by(week, day_id, day) %>% 
+  group_by(week,day) %>% 
   summarize(total_act = sum(act_amount)) %>% 
-  select(week, day, total_act) %>% 
-  arrange(desc(day)) %>%
+  pivot_wider(names_from = 'day', 
+    values_from = 'total_act')%>%
   knitr::kable()
 agg_df
 ```
