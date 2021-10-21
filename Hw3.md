@@ -3,7 +3,7 @@ Homework 3
 Yuan Meng
 2021-10-18
 
-## Problem1
+## Problem 1
 
 ``` r
 aisle_df = 
@@ -24,7 +24,7 @@ head(aisle_df, n =1) #the aisle of the most items ordered from is the last row o
     ##   <chr>             <int>
     ## 1 fresh vegetables 150609
 
-From the aisle\_df there are 134 aisles and fresh vegatables is the most
+From the aisle\_df there are 134 aisles and fresh vegetables is the most
 order from. The order number is 150609.
 
 ``` r
@@ -82,7 +82,7 @@ mean_hour_df
     ## 1 Coffee Ice Cream   13.8   14.3    15.4      15.3     15.2   12.3     13.8
     ## 2 Pink Lady Apples   13.4   11.4    11.7      14.2     11.6   12.8     11.9
 
-## Problem2
+## Problem 2
 
 ``` r
 library(p8105.datasets)
@@ -124,7 +124,7 @@ brfss_df
 ``` r
 year02_df = 
   brfss_df %>%
-  filter(year == 2002) %>%
+  filter(year == 2002) %>% #in 2002
   group_by(locationabbr) %>%
   summarize(num_02 = n_distinct(locationdesc)) %>%
  filter(num_02 >= 7 ) #states were observed at 7 or more locations in 2002
@@ -144,7 +144,7 @@ year02_df
 ``` r
 year10_df = 
   brfss_df %>%
-  filter(year == 2010)  %>%
+  filter(year == 2010)  %>% #in 2010
  group_by(locationabbr) %>%
   summarize(num_10 = n_distinct(locationdesc))%>%
  filter(num_10 >= 7 ) #states were observed at 7 or more locations in 2010
@@ -205,3 +205,145 @@ ggplot(excellent_df,aes(x = year, y = mean_data, group= locationabbr, color = lo
     ## Warning: Removed 3 row(s) containing missing values (geom_path).
 
 ![](Hw3_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+two_year_df = 
+  brfss_df %>%
+  filter(year == c('2006','2010'),locationabbr == "NY") %>%
+  mutate( 
+    year = factor(year), locationabbr = factor(locationabbr), locationdesc = factor(locationdesc), data_value = as.numeric(data_value)) %>%
+mutate(
+  response = factor(response, levels= c("Poor", "Fair","Good","Very good","Excellent"))
+)
+```
+
+    ## Warning in year == c("2006", "2010"): longer object length is not a multiple of
+    ## shorter object length
+
+``` r
+ggplot(two_year_df, aes(x = response, y = data_value)) + 
+  geom_boxplot()+
+  facet_grid(. ~ year) +
+  viridis::scale_fill_viridis(discrete = TRUE) #two-panel plot showing
+```
+
+![](Hw3_files/figure-gfm/unnamed-chunk-9-1.png)<!-- --> From the graph
+we can see distrubtion of 2006 and 2010 are similar.
+
+## Problem 3
+
+``` r
+accel_data = 
+  read_csv("./data/accel_data.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(cols = activity_1:activity_1440, 
+               names_to = "activity_min", 
+               values_to = "act_amount", names_prefix = "activity_") %>% 
+  mutate(weekend_or_day = ifelse(day == "Saturday" & day =="Sunday","Weekend","Weekday")) %>% 
+  mutate(activity_min = as.numeric(activity_min), 
+         day = factor(day, levels = c("Monday","Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")))
+accel_data
+```
+
+    ## # A tibble: 50,400 × 6
+    ##     week day_id day    activity_min act_amount weekend_or_day
+    ##    <dbl>  <dbl> <fct>         <dbl>      <dbl> <chr>         
+    ##  1     1      1 Friday            1       88.4 Weekday       
+    ##  2     1      1 Friday            2       82.2 Weekday       
+    ##  3     1      1 Friday            3       64.4 Weekday       
+    ##  4     1      1 Friday            4       70.0 Weekday       
+    ##  5     1      1 Friday            5       75.0 Weekday       
+    ##  6     1      1 Friday            6       66.3 Weekday       
+    ##  7     1      1 Friday            7       53.8 Weekday       
+    ##  8     1      1 Friday            8       47.8 Weekday       
+    ##  9     1      1 Friday            9       55.5 Weekday       
+    ## 10     1      1 Friday           10       43.0 Weekday       
+    ## # … with 50,390 more rows
+
+There are 6 variable. The variables are week,
+day\_id,day,activity,act\_amount,weekend\_or\_day. There are 50400
+observations.
+
+``` r
+agg_df = 
+  accel_data %>% 
+  group_by(week, day_id, day) %>% 
+  summarize(total_act = sum(act_amount)) %>% 
+  select(week, day, total_act) %>% 
+  arrange(desc(day)) %>%
+  knitr::kable()
+agg_df
+```
+
+| day\_id | week | day       | total\_act |
+|--------:|-----:|:----------|-----------:|
+|       4 |    1 | Sunday    |  631105.00 |
+|      11 |    2 | Sunday    |  422018.00 |
+|      18 |    3 | Sunday    |  467052.00 |
+|      25 |    4 | Sunday    |  260617.00 |
+|      32 |    5 | Sunday    |  138421.00 |
+|       3 |    1 | Saturday  |  376254.00 |
+|      10 |    2 | Saturday  |  607175.00 |
+|      17 |    3 | Saturday  |  382928.00 |
+|      24 |    4 | Saturday  |    1440.00 |
+|      31 |    5 | Saturday  |    1440.00 |
+|       1 |    1 | Friday    |  480542.62 |
+|       8 |    2 | Friday    |  568839.00 |
+|      15 |    3 | Friday    |  467420.00 |
+|      22 |    4 | Friday    |  154049.00 |
+|      29 |    5 | Friday    |  620860.00 |
+|       5 |    1 | Thursday  |  355923.64 |
+|      12 |    2 | Thursday  |  474048.00 |
+|      19 |    3 | Thursday  |  371230.00 |
+|      26 |    4 | Thursday  |  340291.00 |
+|      33 |    5 | Thursday  |  549658.00 |
+|       7 |    1 | Wednesday |  340115.01 |
+|      14 |    2 | Wednesday |  440962.00 |
+|      21 |    3 | Wednesday |  468869.00 |
+|      28 |    4 | Wednesday |  434460.00 |
+|      35 |    5 | Wednesday |  445366.00 |
+|       6 |    1 | Tuesday   |  307094.24 |
+|      13 |    2 | Tuesday   |  423245.00 |
+|      20 |    3 | Tuesday   |  381507.00 |
+|      27 |    4 | Tuesday   |  319568.00 |
+|      34 |    5 | Tuesday   |  367824.00 |
+|       2 |    1 | Monday    |   78828.07 |
+|       9 |    2 | Monday    |  295431.00 |
+|      16 |    3 | Monday    |  685910.00 |
+|      23 |    4 | Monday    |  409450.00 |
+|      30 |    5 | Monday    |  389080.00 |
+
+There is no trends apparent.
+
+``` r
+day_activity = 
+ accel_data %>% 
+  mutate(activity_min = as.numeric(activity_min)) %>% 
+  group_by(day, activity_min) %>% 
+  summarize(mean_day_activity = mean(act_amount)) %>%
+  ggplot(aes(x = activity_min, y = mean_day_activity, color = day, group = day)) +      geom_smooth(se = FALSE) +
+  labs(x = "mintues", y = "activity value")
+viridis::scale_color_viridis
+```
+
+    ## function (..., alpha = 1, begin = 0, end = 1, direction = 1, 
+    ##     discrete = FALSE, option = "D") 
+    ## {
+    ##     if (discrete) {
+    ##         discrete_scale("colour", "viridis", viridis_pal(alpha, 
+    ##             begin, end, direction, option), ...)
+    ##     }
+    ##     else {
+    ##         scale_color_gradientn(colours = viridisLite::viridis(256, 
+    ##             alpha, begin, end, direction, option), ...)
+    ##     }
+    ## }
+    ## <bytecode: 0x7f89a04cdc58>
+    ## <environment: namespace:viridis>
+
+``` r
+day_activity
+```
+
+![](Hw3_files/figure-gfm/unnamed-chunk-12-1.png)<!-- --> The person have
+most minutes activities on Friday night and Sunday morning.

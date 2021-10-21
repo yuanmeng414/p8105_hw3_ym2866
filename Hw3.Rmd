@@ -77,7 +77,7 @@ brfss_df
 ```{r}
 year02_df = 
   brfss_df %>%
-  filter(year == 2002) %>%
+  filter(year == 2002) %>% #in 2002
   group_by(locationabbr) %>%
   summarize(num_02 = n_distinct(locationdesc)) %>%
  filter(num_02 >= 7 ) #states were observed at 7 or more locations in 2002
@@ -85,7 +85,7 @@ year02_df
 
 year10_df = 
   brfss_df %>%
-  filter(year == 2010)  %>%
+  filter(year == 2010)  %>% #in 2010
  group_by(locationabbr) %>%
   summarize(num_10 = n_distinct(locationdesc))%>%
  filter(num_10 >= 7 ) #states were observed at 7 or more locations in 2010
@@ -101,7 +101,6 @@ excellent_df =
   summarize(mean_data = mean(data_value)) #averages the data_value across locations within a state.
 excellent_df  
 ggplot(excellent_df,aes(x = year, y = mean_data, group= locationabbr, color = locationabbr)) + geom_line(alpha = 0.6) #“spaghetti” plot of this average value over time within a state
-
 ```
 
 ```{r}
@@ -117,11 +116,46 @@ mutate(
 ggplot(two_year_df, aes(x = response, y = data_value)) + 
   geom_boxplot()+
   facet_grid(. ~ year) +
-  viridis::scale_fill_viridis(discrete = TRUE)
+  viridis::scale_fill_viridis(discrete = TRUE) #two-panel plot showing
 ```
+From the graph we can see distrubtion of 2006 and 2010 are similar.
 
 ## Problem 3
-```{r}
+```{r message = FALSE}
+accel_data = 
+  read_csv("./data/accel_data.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(cols = activity_1:activity_1440, 
+               names_to = "activity_min", 
+               values_to = "act_amount", names_prefix = "activity_") %>% 
+  mutate(weekend_or_day = ifelse(day == "Saturday" & day =="Sunday","Weekend","Weekday")) %>% 
+  mutate(activity_min = as.numeric(activity_min), 
+         day = factor(day, levels = c("Monday","Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")))
+accel_data
 ```
+There are `r ncol(accel_data)` variable. The variables are week, day_id,day,activity,act_amount,weekend_or_day. There are 50400 observations.
 
+```{r message = FALSE}
+agg_df = 
+  accel_data %>% 
+  group_by(week, day_id, day) %>% 
+  summarize(total_act = sum(act_amount)) %>% 
+  select(week, day, total_act) %>% 
+  arrange(desc(day)) %>%
+  knitr::kable()
+agg_df
+```
+There is no trends apparent.
 
+```{r message = FALSE}
+day_activity = 
+ accel_data %>% 
+  mutate(activity_min = as.numeric(activity_min)) %>% 
+  group_by(day, activity_min) %>% 
+  summarize(mean_day_activity = mean(act_amount)) %>%
+  ggplot(aes(x = activity_min, y = mean_day_activity, color = day, group = day)) +      geom_smooth(se = FALSE) +
+  labs(x = "mintues", y = "activity value")
+viridis::scale_color_viridis
+day_activity
+```
+The person have most minutes activities on Friday night and Sunday morning.
